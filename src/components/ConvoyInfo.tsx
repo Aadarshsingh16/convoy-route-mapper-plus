@@ -1,3 +1,4 @@
+
 import React from 'react';
 interface ConvoyInfoProps {
   source: string;
@@ -11,7 +12,7 @@ const ConvoyInfo: React.FC<ConvoyInfoProps> = ({
   halt,
   convoyId
 }) => {
-  return <div className="convoy-card rounded-lg p-4 w-64 text-white max-w-xs">
+  return <div className="convoy-card rounded-lg p-4 w-64 text-white max-w-xs bg-black/20 backdrop-blur-sm">
       <div className="mb-4">
         <h2 className="text-lg font-semibold mb-4">CONVOY DEPARTING</h2>
         

@@ -47,12 +47,10 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
     onGenerateRoute?.();
     toast.success("Generating route...");
   };
-  return <div className="convoy-sidebar rounded-lg p-4 w-64 text-white bg-black/40 backdrop-blur-sm">
+  return <div className="convoy-sidebar rounded-lg p-4 w-64 text-white bg-black/30 backdrop-blur-sm">
       <div className="flex items-center mb-6">
         <h2 className="text-lg font-semibold">ROUTE PLAN</h2>
       </div>
-
-      
 
       <div className="space-y-4 mb-4">
         <div className="space-y-2">
@@ -60,7 +58,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
           <div className="flex gap-2">
             <Input placeholder="Enter source location" className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" value={sourceInput} onChange={e => setSourceInput(e.target.value)} />
             <Button size="sm" variant="outline" onClick={handleUpdateSource}>
-              <MapPin size={16} className="text-green-500" />
+              <MapPin size={16} className="text-gray-400" />
             </Button>
           </div>
         </div>
@@ -70,7 +68,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
           <div className="flex gap-2">
             <Input placeholder="Add halt location" className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" value={haltInput} onChange={e => setHaltInput(e.target.value)} />
             <Button size="sm" variant="outline" onClick={handleAddHalt}>
-              <MapPin size={16} className="text-blue-500" />
+              <MapPin size={16} className="text-gray-400" />
             </Button>
           </div>
         </div>
@@ -80,13 +78,13 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
           <div className="flex gap-2">
             <Input placeholder="Enter destination" className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" value={destinationInput} onChange={e => setDestinationInput(e.target.value)} />
             <Button size="sm" variant="outline" onClick={handleUpdateDestination}>
-              <MapPin size={16} className="text-red-500" />
+              <MapPin size={16} className="text-gray-400" />
             </Button>
           </div>
         </div>
         
         <div className="pt-4">
-          <Button onClick={handleGenerateRoute} className="w-full flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-200">
+          <Button onClick={handleGenerateRoute} className="w-full flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-200 text-white">
             <Navigation size={16} />
             Generate Route
           </Button>
