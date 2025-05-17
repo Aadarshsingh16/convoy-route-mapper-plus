@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -8,9 +9,11 @@ interface MapComponentProps {
   destination?: string;
   halt?: string;
   selectedVehicleType: 'civil' | 'army';
+  onLocationUpdate?: (type: 'source' | 'destination' | 'halt', location: string, coordinates: [number, number]) => void;
 }
 
-const MAPBOX_TOKEN = 'YOUR_MAPBOX_TOKEN';
+// Using the provided Mapbox token
+const MAPBOX_TOKEN = 'pk.eyJ1IjoidXR0a2Fyc2gxNCIsImEiOiJjbWFpODAzbG0wNGUxMmlzaTlpYWgybTVuIn0.LweKduVrNZ0Bmo3D5nBjAw';
 
 // Update the coordinate type to be properly typed as [number, number] tuples
 const demoCoordinates: Record<string, [number, number]> = {
@@ -23,11 +26,22 @@ const MapComponent: React.FC<MapComponentProps> = ({
   source = "New Delhi, IN", 
   destination = "Chennai, IN", 
   halt = "Bhopal, IN",
-  selectedVehicleType
+  selectedVehicleType,
+  onLocationUpdate
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [routeLoaded, setRouteLoaded] = useState(false);
+  
+  // Current coordinates being used
+  const [sourceCoords, setSourceCoords] = useState<[number, number]>(demoCoordinates.newDelhi);
+  const [destCoords, setDestCoords] = useState<[number, number]>(demoCoordinates.chennai);
+  const [haltCoords, setHaltCoords] = useState<[number, number]>(demoCoordinates.bhopal);
+  
+  // Markers
+  const sourceMarker = useRef<mapboxgl.Marker | null>(null);
+  const destMarker = useRef<mapboxgl.Marker | null>(null);
+  const haltMarker = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
     if (mapContainer.current === null) return;
@@ -55,17 +69,53 @@ const MapComponent: React.FC<MapComponentProps> = ({
       if (!map.current) return;
 
       // Add markers for source, halt, and destination
-      new mapboxgl.Marker({ color: '#4CAF50' })
-        .setLngLat(demoCoordinates.newDelhi)
+      sourceMarker.current = new mapboxgl.Marker({ color: '#4CAF50' }) // Green for source
+        .setLngLat(sourceCoords)
         .addTo(map.current);
 
-      new mapboxgl.Marker({ color: '#2196F3' })
-        .setLngLat(demoCoordinates.bhopal)
+      haltMarker.current = new mapboxgl.Marker({ color: '#2196F3' }) // Blue for halt
+        .setLngLat(haltCoords)
         .addTo(map.current);
 
-      new mapboxgl.Marker({ color: '#F44336' })
-        .setLngLat(demoCoordinates.chennai)
+      destMarker.current = new mapboxgl.Marker({ color: '#F44336' }) // Red for destination
+        .setLngLat(destCoords)
         .addTo(map.current);
+
+      // Allow markers to be draggable
+      sourceMarker.current.setDraggable(true);
+      haltMarker.current.setDraggable(true);
+      destMarker.current.setDraggable(true);
+      
+      // Add drag end events
+      sourceMarker.current.on('dragend', () => {
+        if (!sourceMarker.current) return;
+        const newCoords = sourceMarker.current.getLngLat();
+        setSourceCoords([newCoords.lng, newCoords.lat]);
+        updateRoutes();
+        if (onLocationUpdate) {
+          onLocationUpdate('source', `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`, [newCoords.lng, newCoords.lat]);
+        }
+      });
+      
+      haltMarker.current.on('dragend', () => {
+        if (!haltMarker.current) return;
+        const newCoords = haltMarker.current.getLngLat();
+        setHaltCoords([newCoords.lng, newCoords.lat]);
+        updateRoutes();
+        if (onLocationUpdate) {
+          onLocationUpdate('halt', `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`, [newCoords.lng, newCoords.lat]);
+        }
+      });
+      
+      destMarker.current.on('dragend', () => {
+        if (!destMarker.current) return;
+        const newCoords = destMarker.current.getLngLat();
+        setDestCoords([newCoords.lng, newCoords.lat]);
+        updateRoutes();
+        if (onLocationUpdate) {
+          onLocationUpdate('destination', `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`, [newCoords.lng, newCoords.lat]);
+        }
+      });
 
       // Add route line
       map.current.addSource('route', {
@@ -76,9 +126,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
           geometry: {
             type: 'LineString',
             coordinates: [
-              demoCoordinates.newDelhi,
-              demoCoordinates.bhopal,
-              demoCoordinates.chennai
+              sourceCoords,
+              haltCoords,
+              destCoords
             ]
           }
         }
@@ -107,9 +157,9 @@ const MapComponent: React.FC<MapComponentProps> = ({
           geometry: {
             type: 'LineString',
             coordinates: [
-              demoCoordinates.newDelhi,
+              sourceCoords,
               [78.8, 22.8] as [number, number], // Type assertion for alternate point
-              demoCoordinates.chennai
+              destCoords
             ]
           }
         }
@@ -134,10 +184,51 @@ const MapComponent: React.FC<MapComponentProps> = ({
       toast.success("Route loaded successfully");
     });
 
+    // Add click event to the map to add new locations
+    map.current.on('click', (e) => {
+      console.log(`Clicked at: [${e.lngLat.lng}, ${e.lngLat.lat}]`);
+    });
+
     return () => {
       map.current?.remove();
     };
   }, []);
+
+  // Function to update routes on the map
+  const updateRoutes = () => {
+    if (!map.current || !routeLoaded) return;
+    
+    // Update main route
+    map.current.getSource('route')?.setData({
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          sourceCoords,
+          haltCoords,
+          destCoords
+        ]
+      }
+    });
+
+    // Update alternate route
+    map.current.getSource('alternate-route')?.setData({
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          sourceCoords,
+          [
+            (sourceCoords[0] + destCoords[0]) / 2 + 1, 
+            (sourceCoords[1] + destCoords[1]) / 2 - 1
+          ] as [number, number],
+          destCoords
+        ]
+      }
+    });
+  };
 
   // Update routes when vehicle type changes
   useEffect(() => {
@@ -150,6 +241,17 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
 
   }, [selectedVehicleType, routeLoaded]);
+
+  // Update marker positions if coordinates are changed externally
+  useEffect(() => {
+    if (!routeLoaded) return;
+    
+    sourceMarker.current?.setLngLat(sourceCoords);
+    haltMarker.current?.setLngLat(haltCoords);
+    destMarker.current?.setLngLat(destCoords);
+    
+    updateRoutes();
+  }, [sourceCoords, haltCoords, destCoords, routeLoaded]);
 
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">

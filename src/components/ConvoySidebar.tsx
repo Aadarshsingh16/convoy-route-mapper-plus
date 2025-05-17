@@ -1,10 +1,53 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Truck } from "lucide-react";
+import { Users, Truck, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
-const ConvoySidebar: React.FC = () => {
+interface ConvoySidebarProps {
+  onAddHalt?: (halt: string) => void;
+  onUpdateSource?: (source: string) => void;
+  onUpdateDestination?: (destination: string) => void;
+}
+
+const ConvoySidebar: React.FC<ConvoySidebarProps> = ({ 
+  onAddHalt,
+  onUpdateSource,
+  onUpdateDestination
+}) => {
+  const [haltInput, setHaltInput] = useState('');
+  const [sourceInput, setSourceInput] = useState('');
+  const [destinationInput, setDestinationInput] = useState('');
+  
+  const handleAddHalt = () => {
+    if (haltInput.trim()) {
+      onAddHalt?.(haltInput.trim());
+      toast.success(`Halt added: ${haltInput}`);
+      setHaltInput('');
+    } else {
+      toast.error("Please enter a valid halt location");
+    }
+  };
+  
+  const handleUpdateSource = () => {
+    if (sourceInput.trim()) {
+      onUpdateSource?.(sourceInput.trim());
+      toast.success(`Source updated: ${sourceInput}`);
+    } else {
+      toast.error("Please enter a valid source location");
+    }
+  };
+  
+  const handleUpdateDestination = () => {
+    if (destinationInput.trim()) {
+      onUpdateDestination?.(destinationInput.trim());
+      toast.success(`Destination updated: ${destinationInput}`);
+    } else {
+      toast.error("Please enter a valid destination location");
+    }
+  };
+
   return (
     <div className="convoy-sidebar rounded-lg p-4 w-64 text-white">
       <div className="flex items-center mb-6">
@@ -16,19 +59,51 @@ const ConvoySidebar: React.FC = () => {
         <span>Invite convoy</span>
       </Button>
 
-      <div className="space-y-2 mb-4">
-        <Input 
-          placeholder="Add Sub Halts" 
-          className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
-        />
-        <Input 
-          placeholder="Enter end halt" 
-          className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
-        />
-        <Input 
-          placeholder="" 
-          className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
-        />
+      <div className="space-y-4 mb-4">
+        <div className="space-y-2">
+          <label className="text-sm text-gray-300">Update Source</label>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Enter source location" 
+              className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
+              value={sourceInput}
+              onChange={(e) => setSourceInput(e.target.value)}
+            />
+            <Button size="sm" variant="outline" onClick={handleUpdateSource}>
+              <MapPin size={16} className="text-green-500" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm text-gray-300">Add Sub Halts</label>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Add halt location" 
+              className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
+              value={haltInput}
+              onChange={(e) => setHaltInput(e.target.value)}
+            />
+            <Button size="sm" variant="outline" onClick={handleAddHalt}>
+              <MapPin size={16} className="text-blue-500" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="text-sm text-gray-300">Update Destination</label>
+          <div className="flex gap-2">
+            <Input 
+              placeholder="Enter destination" 
+              className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
+              value={destinationInput}
+              onChange={(e) => setDestinationInput(e.target.value)}
+            />
+            <Button size="sm" variant="outline" onClick={handleUpdateDestination}>
+              <MapPin size={16} className="text-red-500" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="my-6">
