@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -78,7 +77,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
       const data = await response.json();
       
       if (data.routes && data.routes.length > 0) {
-        return data.routes[0].geometry;
+        return data.routes[0].geometry as mapboxgl.LineString;
       } else {
         throw new Error('No routes found');
       }
@@ -87,7 +86,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
       toast.error('Failed to fetch route');
       // Return a simple line as fallback
       return {
-        type: 'LineString',
+        type: 'LineString' as const,
         coordinates: [
           start,
           ...waypoints,
@@ -101,7 +100,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const generateAlternateRoute = (mainRoute: any) => {
     if (!mainRoute || !mainRoute.coordinates || mainRoute.coordinates.length < 2) {
       return {
-        type: 'LineString',
+        type: 'LineString' as const,
         coordinates: [sourceCoords, destCoords]
       };
     }
@@ -120,7 +119,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
     
     return {
-      type: 'LineString',
+      type: 'LineString' as const,
       coordinates: coords
     };
   };
@@ -313,7 +312,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         (altRouteSource as mapboxgl.GeoJSONSource).setData({
           type: 'Feature',
           properties: {},
-          geometry: alternateGeometry
+          geometry: alternateGeometry as mapboxgl.LineString
         });
       }
       
@@ -351,7 +350,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         type: 'Feature',
         properties: {},
         geometry: {
-          type: 'LineString',
+          type: 'LineString' as const,
           coordinates: [
             sourceCoords,
             ...haltCoords,
@@ -368,7 +367,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         type: 'Feature',
         properties: {},
         geometry: {
-          type: 'LineString',
+          type: 'LineString' as const,
           coordinates: [
             sourceCoords,
             [
