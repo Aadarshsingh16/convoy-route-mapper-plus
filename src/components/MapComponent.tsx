@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -13,7 +12,8 @@ interface MapComponentProps {
 
 const MAPBOX_TOKEN = 'YOUR_MAPBOX_TOKEN';
 
-const demoCoordinates = {
+// Update the coordinate type to be properly typed as [number, number] tuples
+const demoCoordinates: Record<string, [number, number]> = {
   newDelhi: [77.1025, 28.7041],
   bhopal: [77.4126, 23.2599],
   chennai: [80.2707, 13.0827]
@@ -108,7 +108,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
             type: 'LineString',
             coordinates: [
               demoCoordinates.newDelhi,
-              [78.8, 22.8], // Slightly different path
+              [78.8, 22.8] as [number, number], // Type assertion for alternate point
               demoCoordinates.chennai
             ]
           }
