@@ -25,13 +25,13 @@ const ConvoyInfo: React.FC<ConvoyInfoProps> = ({
             <span className="font-medium">{destination}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-gray-400">Reached Sub Halt:</span>
+            <span className="text-gray-400 mx-px my-0 px-0 py-0">Reached Sub Halt:</span>
             <span className="font-medium">{halt}</span>
           </div>
         </div>
 
         <div className="flex justify-between mt-4">
-          <span className="text-gray-400 py-[2px] my-0 mx-0">Convoy ID:</span>
+          <span className="text-gray-400 my-0 mx-[2px] text-left py-0 px-0">Convoy ID:</span>
           <span className="font-medium">{convoyId}</span>
         </div>
       </div>
