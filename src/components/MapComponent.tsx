@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -12,6 +13,12 @@ interface MapComponentProps {
   onLocationUpdate?: (type: 'source' | 'destination' | 'halt', location: string, coordinates: [number, number], haltIndex?: number) => void;
   onGenerateRoute?: () => void;
   isRouteLoading?: boolean;
+}
+
+// Define GeoJSON types that are missing from mapbox-gl
+interface LineString {
+  type: 'LineString';
+  coordinates: [number, number][];
 }
 
 // Using the provided Mapbox token
@@ -57,7 +64,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
   };
 
   // Fetch route from Mapbox Directions API
-  const fetchRoute = async (start: [number, number], end: [number, number], waypoints: [number, number][] = []) => {
+  const fetchRoute = async (start: [number, number], end: [number, number], waypoints: [number, number][] = []): Promise<LineString> => {
     try {
       // Format coordinates for the API request
       const coordinatesString = [
@@ -77,7 +84,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
       const data = await response.json();
       
       if (data.routes && data.routes.length > 0) {
-        return data.routes[0].geometry as mapboxgl.LineString;
+        return data.routes[0].geometry as LineString;
       } else {
         throw new Error('No routes found');
       }
@@ -86,7 +93,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
       toast.error('Failed to fetch route');
       // Return a simple line as fallback
       return {
-        type: 'LineString' as const,
+        type: 'LineString',
         coordinates: [
           start,
           ...waypoints,
@@ -97,10 +104,10 @@ const MapComponent: React.FC<MapComponentProps> = ({
   };
 
   // Generate a realistic alternate route with a slight deviation
-  const generateAlternateRoute = (mainRoute: any) => {
+  const generateAlternateRoute = (mainRoute: LineString): LineString => {
     if (!mainRoute || !mainRoute.coordinates || mainRoute.coordinates.length < 2) {
       return {
-        type: 'LineString' as const,
+        type: 'LineString',
         coordinates: [sourceCoords, destCoords]
       };
     }
@@ -119,7 +126,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
     
     return {
-      type: 'LineString' as const,
+      type: 'LineString',
       coordinates: coords
     };
   };
@@ -312,7 +319,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         (altRouteSource as mapboxgl.GeoJSONSource).setData({
           type: 'Feature',
           properties: {},
-          geometry: alternateGeometry as mapboxgl.LineString
+          geometry: alternateGeometry
         });
       }
       
@@ -350,7 +357,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         type: 'Feature',
         properties: {},
         geometry: {
-          type: 'LineString' as const,
+          type: 'LineString',
           coordinates: [
             sourceCoords,
             ...haltCoords,
@@ -367,7 +374,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
         type: 'Feature',
         properties: {},
         geometry: {
-          type: 'LineString' as const,
+          type: 'LineString',
           coordinates: [
             sourceCoords,
             [
