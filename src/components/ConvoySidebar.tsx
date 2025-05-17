@@ -1,18 +1,15 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, Truck, MapPin, Navigation } from "lucide-react";
 import { toast } from "sonner";
-
 interface ConvoySidebarProps {
   onAddHalt?: (halt: string) => void;
   onUpdateSource?: (source: string) => void;
   onUpdateDestination?: (destination: string) => void;
   onGenerateRoute?: () => void;
 }
-
-const ConvoySidebar: React.FC<ConvoySidebarProps> = ({ 
+const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
   onAddHalt,
   onUpdateSource,
   onUpdateDestination,
@@ -21,7 +18,6 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
   const [haltInput, setHaltInput] = useState('');
   const [sourceInput, setSourceInput] = useState('');
   const [destinationInput, setDestinationInput] = useState('');
-  
   const handleAddHalt = () => {
     if (haltInput.trim()) {
       onAddHalt?.(haltInput.trim());
@@ -31,7 +27,6 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
       toast.error("Please enter a valid halt location");
     }
   };
-  
   const handleUpdateSource = () => {
     if (sourceInput.trim()) {
       onUpdateSource?.(sourceInput.trim());
@@ -40,7 +35,6 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
       toast.error("Please enter a valid source location");
     }
   };
-  
   const handleUpdateDestination = () => {
     if (destinationInput.trim()) {
       onUpdateDestination?.(destinationInput.trim());
@@ -49,33 +43,22 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
       toast.error("Please enter a valid destination location");
     }
   };
-  
   const handleGenerateRoute = () => {
     onGenerateRoute?.();
     toast.success("Generating route...");
   };
-
-  return (
-    <div className="convoy-sidebar rounded-lg p-4 w-64 text-white bg-black/40 backdrop-blur-sm">
+  return <div className="convoy-sidebar rounded-lg p-4 w-64 text-white bg-black/40 backdrop-blur-sm">
       <div className="flex items-center mb-6">
-        <h2 className="text-lg font-semibold">Convoy (Team)</h2>
+        <h2 className="text-lg font-semibold">ROUTE PLAN</h2>
       </div>
 
-      <Button variant="outline" className="w-full mb-4 bg-opacity-20 bg-black/30 border-gray-700 text-white flex items-center justify-start space-x-2">
-        <Users size={16} />
-        <span>Invite convoy</span>
-      </Button>
+      
 
       <div className="space-y-4 mb-4">
         <div className="space-y-2">
           <label className="text-sm text-gray-300">Update Source</label>
           <div className="flex gap-2">
-            <Input 
-              placeholder="Enter source location" 
-              className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" 
-              value={sourceInput}
-              onChange={(e) => setSourceInput(e.target.value)}
-            />
+            <Input placeholder="Enter source location" className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" value={sourceInput} onChange={e => setSourceInput(e.target.value)} />
             <Button size="sm" variant="outline" onClick={handleUpdateSource}>
               <MapPin size={16} className="text-green-500" />
             </Button>
@@ -85,12 +68,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
         <div className="space-y-2">
           <label className="text-sm text-gray-300">Add Sub Halts</label>
           <div className="flex gap-2">
-            <Input 
-              placeholder="Add halt location" 
-              className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" 
-              value={haltInput}
-              onChange={(e) => setHaltInput(e.target.value)}
-            />
+            <Input placeholder="Add halt location" className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" value={haltInput} onChange={e => setHaltInput(e.target.value)} />
             <Button size="sm" variant="outline" onClick={handleAddHalt}>
               <MapPin size={16} className="text-blue-500" />
             </Button>
@@ -100,12 +78,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
         <div className="space-y-2">
           <label className="text-sm text-gray-300">Update Destination</label>
           <div className="flex gap-2">
-            <Input 
-              placeholder="Enter destination" 
-              className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" 
-              value={destinationInput}
-              onChange={(e) => setDestinationInput(e.target.value)}
-            />
+            <Input placeholder="Enter destination" className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" value={destinationInput} onChange={e => setDestinationInput(e.target.value)} />
             <Button size="sm" variant="outline" onClick={handleUpdateDestination}>
               <MapPin size={16} className="text-red-500" />
             </Button>
@@ -113,10 +86,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
         </div>
         
         <div className="pt-4">
-          <Button 
-            className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2" 
-            onClick={handleGenerateRoute}
-          >
+          <Button onClick={handleGenerateRoute} className="w-full flex items-center justify-center gap-2 bg-yellow-300 hover:bg-yellow-200">
             <Navigation size={16} />
             Generate Route
           </Button>
@@ -138,8 +108,6 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
           <div className="text-sm text-gray-300">Test data 2</div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ConvoySidebar;
