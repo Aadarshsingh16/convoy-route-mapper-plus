@@ -2,19 +2,21 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Truck, MapPin } from "lucide-react";
+import { Users, Truck, MapPin, Navigation } from "lucide-react";
 import { toast } from "sonner";
 
 interface ConvoySidebarProps {
   onAddHalt?: (halt: string) => void;
   onUpdateSource?: (source: string) => void;
   onUpdateDestination?: (destination: string) => void;
+  onGenerateRoute?: () => void;
 }
 
 const ConvoySidebar: React.FC<ConvoySidebarProps> = ({ 
   onAddHalt,
   onUpdateSource,
-  onUpdateDestination
+  onUpdateDestination,
+  onGenerateRoute
 }) => {
   const [haltInput, setHaltInput] = useState('');
   const [sourceInput, setSourceInput] = useState('');
@@ -47,14 +49,19 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
       toast.error("Please enter a valid destination location");
     }
   };
+  
+  const handleGenerateRoute = () => {
+    onGenerateRoute?.();
+    toast.success("Generating route...");
+  };
 
   return (
-    <div className="convoy-sidebar rounded-lg p-4 w-64 text-white">
+    <div className="convoy-sidebar rounded-lg p-4 w-64 text-white bg-black/40 backdrop-blur-sm">
       <div className="flex items-center mb-6">
         <h2 className="text-lg font-semibold">Convoy (Team)</h2>
       </div>
 
-      <Button variant="outline" className="w-full mb-4 bg-opacity-20 bg-black border-gray-700 text-white flex items-center justify-start space-x-2">
+      <Button variant="outline" className="w-full mb-4 bg-opacity-20 bg-black/30 border-gray-700 text-white flex items-center justify-start space-x-2">
         <Users size={16} />
         <span>Invite convoy</span>
       </Button>
@@ -65,7 +72,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
           <div className="flex gap-2">
             <Input 
               placeholder="Enter source location" 
-              className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
+              className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" 
               value={sourceInput}
               onChange={(e) => setSourceInput(e.target.value)}
             />
@@ -80,7 +87,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
           <div className="flex gap-2">
             <Input 
               placeholder="Add halt location" 
-              className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
+              className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" 
               value={haltInput}
               onChange={(e) => setHaltInput(e.target.value)}
             />
@@ -95,7 +102,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
           <div className="flex gap-2">
             <Input 
               placeholder="Enter destination" 
-              className="bg-opacity-20 bg-black border-gray-700 text-white placeholder:text-gray-400" 
+              className="bg-black/30 border-gray-700 text-white placeholder:text-gray-400" 
               value={destinationInput}
               onChange={(e) => setDestinationInput(e.target.value)}
             />
@@ -104,6 +111,16 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
             </Button>
           </div>
         </div>
+        
+        <div className="pt-4">
+          <Button 
+            className="w-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center gap-2" 
+            onClick={handleGenerateRoute}
+          >
+            <Navigation size={16} />
+            Generate Route
+          </Button>
+        </div>
       </div>
 
       <div className="my-6">
@@ -111,7 +128,7 @@ const ConvoySidebar: React.FC<ConvoySidebarProps> = ({
       </div>
       
       <div className="mb-4">
-        <Button variant="outline" className="w-full mb-3 bg-opacity-20 bg-black border-gray-700 text-white flex items-center justify-start space-x-2">
+        <Button variant="outline" className="w-full mb-3 bg-black/30 border-gray-700 text-white flex items-center justify-start space-x-2">
           <Truck size={16} />
           <span>Load Management</span>
         </Button>

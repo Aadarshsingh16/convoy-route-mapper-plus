@@ -3,13 +3,16 @@ import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { toast } from "sonner";
+import { Bot } from "lucide-react";
 
 interface MapComponentProps {
   source?: string;
   destination?: string;
-  halt?: string;
+  halts?: string[];
   selectedVehicleType: 'civil' | 'army';
-  onLocationUpdate?: (type: 'source' | 'destination' | 'halt', location: string, coordinates: [number, number]) => void;
+  onLocationUpdate?: (type: 'source' | 'destination' | 'halt', location: string, coordinates: [number, number], haltIndex?: number) => void;
+  onGenerateRoute?: () => void;
+  isRouteLoading?: boolean;
 }
 
 // Using the provided Mapbox token
@@ -25,23 +28,34 @@ const demoCoordinates: Record<string, [number, number]> = {
 const MapComponent: React.FC<MapComponentProps> = ({ 
   source = "New Delhi, IN", 
   destination = "Chennai, IN", 
-  halt = "Bhopal, IN",
+  halts = ["Bhopal, IN"],
   selectedVehicleType,
-  onLocationUpdate
+  onLocationUpdate,
+  onGenerateRoute,
+  isRouteLoading = false
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [routeLoaded, setRouteLoaded] = useState(false);
+  const [animationInProgress, setAnimationInProgress] = useState(false);
   
   // Current coordinates being used
   const [sourceCoords, setSourceCoords] = useState<[number, number]>(demoCoordinates.newDelhi);
   const [destCoords, setDestCoords] = useState<[number, number]>(demoCoordinates.chennai);
-  const [haltCoords, setHaltCoords] = useState<[number, number]>(demoCoordinates.bhopal);
+  const [haltCoords, setHaltCoords] = useState<[number, number][]>([demoCoordinates.bhopal]);
   
   // Markers
   const sourceMarker = useRef<mapboxgl.Marker | null>(null);
   const destMarker = useRef<mapboxgl.Marker | null>(null);
-  const haltMarker = useRef<mapboxgl.Marker | null>(null);
+  const haltMarkers = useRef<mapboxgl.Marker[]>([]);
+
+  // Custom marker element creator
+  const createMarkerElement = (color: string) => {
+    const el = document.createElement('div');
+    el.className = 'custom-marker';
+    el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bot"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`;
+    return el;
+  };
 
   useEffect(() => {
     if (mapContainer.current === null) return;
@@ -55,35 +69,52 @@ const MapComponent: React.FC<MapComponentProps> = ({
       center: [79.5, 22.5], // Center of India
       zoom: 4,
     });
-
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
     
     // Add route when map loads
     map.current.on('load', () => {
       if (!map.current) return;
 
       // Add markers for source, halt, and destination
-      sourceMarker.current = new mapboxgl.Marker({ color: '#4CAF50' }) // Green for source
+      sourceMarker.current = new mapboxgl.Marker({ 
+        element: createMarkerElement('#4CAF50')
+      })
         .setLngLat(sourceCoords)
         .addTo(map.current);
 
-      haltMarker.current = new mapboxgl.Marker({ color: '#2196F3' }) // Blue for halt
-        .setLngLat(haltCoords)
-        .addTo(map.current);
+      haltMarkers.current = halts.map((_, index) => {
+        const marker = new mapboxgl.Marker({ 
+          element: createMarkerElement('#2196F3') 
+        })
+          .setLngLat(index === 0 ? haltCoords[0] : demoCoordinates.bhopal)
+          .addTo(map.current!);
+          
+        // Allow markers to be draggable
+        marker.setDraggable(true);
+        
+        // Add drag end events
+        marker.on('dragend', () => {
+          if (!marker) return;
+          const newCoords = marker.getLngLat();
+          const newHaltCoords = [...haltCoords];
+          newHaltCoords[index] = [newCoords.lng, newCoords.lat];
+          setHaltCoords(newHaltCoords);
+          updateRoutes();
+          if (onLocationUpdate) {
+            onLocationUpdate('halt', `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`, [newCoords.lng, newCoords.lat], index);
+          }
+        });
+          
+        return marker;
+      });
 
-      destMarker.current = new mapboxgl.Marker({ color: '#F44336' }) // Red for destination
+      destMarker.current = new mapboxgl.Marker({ 
+        element: createMarkerElement('#F44336')
+      })
         .setLngLat(destCoords)
         .addTo(map.current);
 
       // Allow markers to be draggable
       sourceMarker.current.setDraggable(true);
-      haltMarker.current.setDraggable(true);
       destMarker.current.setDraggable(true);
       
       // Add drag end events
@@ -94,16 +125,6 @@ const MapComponent: React.FC<MapComponentProps> = ({
         updateRoutes();
         if (onLocationUpdate) {
           onLocationUpdate('source', `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`, [newCoords.lng, newCoords.lat]);
-        }
-      });
-      
-      haltMarker.current.on('dragend', () => {
-        if (!haltMarker.current) return;
-        const newCoords = haltMarker.current.getLngLat();
-        setHaltCoords([newCoords.lng, newCoords.lat]);
-        updateRoutes();
-        if (onLocationUpdate) {
-          onLocationUpdate('halt', `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`, [newCoords.lng, newCoords.lat]);
         }
       });
       
@@ -127,7 +148,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
             type: 'LineString',
             coordinates: [
               sourceCoords,
-              haltCoords,
+              ...(haltCoords || []),
               destCoords
             ]
           }
@@ -144,7 +165,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
         },
         paint: {
           'line-color': '#1EAEDB',
-          'line-width': 4
+          'line-width': 4,
+          'line-opacity': 0.8
         }
       });
 
@@ -176,7 +198,8 @@ const MapComponent: React.FC<MapComponentProps> = ({
         paint: {
           'line-color': '#808080',
           'line-width': 3,
-          'line-dasharray': [2, 2]
+          'line-dasharray': [2, 2],
+          'line-opacity': 0.6
         }
       });
 
@@ -208,7 +231,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
           type: 'LineString',
           coordinates: [
             sourceCoords,
-            haltCoords,
+            ...haltCoords,
             destCoords
           ]
         }
@@ -236,6 +259,31 @@ const MapComponent: React.FC<MapComponentProps> = ({
     }
   };
 
+  // Animation for route generation
+  useEffect(() => {
+    if (isRouteLoading && map.current && routeLoaded) {
+      setAnimationInProgress(true);
+      
+      // Animate route generation
+      let step = 0;
+      const steps = 30;
+      const animationInterval = setInterval(() => {
+        step++;
+        
+        if (step >= steps) {
+          clearInterval(animationInterval);
+          setAnimationInProgress(false);
+          return;
+        }
+        
+        // Update route line animation
+        map.current?.setPaintProperty('route', 'line-dasharray', [2, 4 * (1 - step/steps)]);
+      }, 50);
+      
+      return () => clearInterval(animationInterval);
+    }
+  }, [isRouteLoading, routeLoaded]);
+
   // Update routes when vehicle type changes
   useEffect(() => {
     if (!map.current || !routeLoaded) return;
@@ -253,15 +301,76 @@ const MapComponent: React.FC<MapComponentProps> = ({
     if (!routeLoaded) return;
     
     sourceMarker.current?.setLngLat(sourceCoords);
-    haltMarker.current?.setLngLat(haltCoords);
+    
+    haltCoords.forEach((coords, index) => {
+      if (index < haltMarkers.current.length) {
+        haltMarkers.current[index].setLngLat(coords);
+      }
+    });
+    
     destMarker.current?.setLngLat(destCoords);
     
     updateRoutes();
   }, [sourceCoords, haltCoords, destCoords, routeLoaded]);
 
+  // Update halt markers when new halts are added
+  useEffect(() => {
+    if (!map.current || !routeLoaded) return;
+    
+    // Remove existing halt markers
+    haltMarkers.current.forEach(marker => marker.remove());
+    
+    // Create new markers for each halt
+    if (halts.length > haltCoords.length) {
+      // Add new default coordinates
+      const newHaltCoords = [...haltCoords];
+      for (let i = haltCoords.length; i < halts.length; i++) {
+        newHaltCoords.push(demoCoordinates.bhopal);
+      }
+      setHaltCoords(newHaltCoords);
+    }
+    
+    // Create markers for each halt
+    haltMarkers.current = halts.map((_, index) => {
+      const coords = index < haltCoords.length ? haltCoords[index] : demoCoordinates.bhopal;
+      const marker = new mapboxgl.Marker({ 
+        element: createMarkerElement('#2196F3')
+      })
+        .setLngLat(coords)
+        .addTo(map.current!);
+        
+      // Allow markers to be draggable
+      marker.setDraggable(true);
+      
+      // Add drag end events
+      marker.on('dragend', () => {
+        if (!marker) return;
+        const newCoords = marker.getLngLat();
+        const newHaltCoords = [...haltCoords];
+        newHaltCoords[index] = [newCoords.lng, newCoords.lat];
+        setHaltCoords(newHaltCoords);
+        updateRoutes();
+        if (onLocationUpdate) {
+          onLocationUpdate('halt', `${newCoords.lat.toFixed(4)}, ${newCoords.lng.toFixed(4)}`, [newCoords.lng, newCoords.lat], index);
+        }
+      });
+      
+      return marker;
+    });
+    
+    updateRoutes();
+  }, [halts.length, routeLoaded]);
+
   return (
     <div className="relative w-full h-full rounded-lg overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg" />
+      <div ref={mapContainer} className="absolute inset-0" />
+      {animationInProgress && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-black/30 backdrop-blur-sm p-4 rounded-lg">
+            <p className="text-white">Calculating route...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
