@@ -198,36 +198,42 @@ const MapComponent: React.FC<MapComponentProps> = ({
   const updateRoutes = () => {
     if (!map.current || !routeLoaded) return;
     
-    // Update main route
-    map.current.getSource('route')?.setData({
-      type: 'Feature',
-      properties: {},
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          sourceCoords,
-          haltCoords,
-          destCoords
-        ]
-      }
-    });
+    // Update main route - Fix type casting for GeoJSON source
+    const mainRouteSource = map.current.getSource('route');
+    if (mainRouteSource && 'setData' in mainRouteSource) {
+      (mainRouteSource as mapboxgl.GeoJSONSource).setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            sourceCoords,
+            haltCoords,
+            destCoords
+          ]
+        }
+      });
+    }
 
-    // Update alternate route
-    map.current.getSource('alternate-route')?.setData({
-      type: 'Feature',
-      properties: {},
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          sourceCoords,
-          [
-            (sourceCoords[0] + destCoords[0]) / 2 + 1, 
-            (sourceCoords[1] + destCoords[1]) / 2 - 1
-          ] as [number, number],
-          destCoords
-        ]
-      }
-    });
+    // Update alternate route - Fix type casting for GeoJSON source
+    const altRouteSource = map.current.getSource('alternate-route');
+    if (altRouteSource && 'setData' in altRouteSource) {
+      (altRouteSource as mapboxgl.GeoJSONSource).setData({
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: [
+            sourceCoords,
+            [
+              (sourceCoords[0] + destCoords[0]) / 2 + 1, 
+              (sourceCoords[1] + destCoords[1]) / 2 - 1
+            ] as [number, number],
+            destCoords
+          ]
+        }
+      });
+    }
   };
 
   // Update routes when vehicle type changes
